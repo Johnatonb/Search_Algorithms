@@ -25,6 +25,12 @@ private:
 
 	}
 
+	matrix(int rowCount, int columnCount) {
+		for (int i = 0; i < rowCount; i++) {
+			base.push_back(std::vector<double>(columnCount, (double)0));
+		}
+	}
+
 	std::vector<double> operator[](int rhs) {
 		return base[rhs];
 	};
@@ -71,12 +77,63 @@ private:
 			update();
 			comparisonMatrix.update();
 			if (check_type == "DOT" || check_type == "ADD" || check_type == "SUB") {
-				if (rows != comparisonMatrix.getRows() || columns != comparisonMatrix.getColumns()) {
+				if (rows != comparisonMatrix.rows || columns != comparisonMatrix.columns) {
 					throw opperationException();
 				}
 			}
 			else if (check_type == "CROSS") {
-				if (columns != comparisonMatrix.getRows()) {
+				if (columns != comparisonMatrix.rows) {
+					throw opperationException();
+				}
+			}
+		}
+		catch (opperationException& e) {
+			std::cerr << e.what() << std::endl;
+		}
+	}
+
+	static void hardCheckMatrix(std::string check_type, matrix checkee) {
+		try {
+			if (check_type == "SIZE") {
+				if (checkee.base.size() > (int)0) {
+					int rowsBasis = checkee.base[0].size();
+					for (int i = 1; i < checkee.base.size(); i++) {
+						if (checkee.base[i].size() != rowsBasis) {
+							throw sizeException();
+						}
+					}
+				}
+			}
+			else if (check_type == "DET") {
+				if (checkee.rows != checkee.columns) {
+					throw opperationException();
+				}
+			}
+			else if (check_type == "INV") {
+				if (checkee.rows != checkee.columns || checkee.determinate == NULL || checkee.determinate == 0) {
+					throw opperationException();
+				}
+			}
+		}
+		catch (sizeException& e) {
+			std::cerr << e.what() << std::endl;
+		}
+		catch (opperationException& e) {
+			std::cerr << e.what() << std::endl;
+		}
+	}
+
+	static void hardCheckMatrices(std::string check_type, matrix checkee1, matrix checkee2) {
+		try {
+			checkee1.update();
+			checkee2.update();
+			if (check_type == "DOT" || check_type == "ADD" || check_type == "SUB") {
+				if (checkee1.rows != checkee2.rows || checkee1.columns != checkee2.columns) {
+					throw opperationException();
+				}
+			}
+			else if (check_type == "CROSS") {
+				if (checkee1.columns != checkee2.rows) {
 					throw opperationException();
 				}
 			}
@@ -161,8 +218,15 @@ public:
 	}
 
 	static matrix dot(matrix multiplicand1, matrix multiplicand2) {
-		matrix multiplier;
 		multiplicand1.update();
 		multiplicand2.update();
+		matrix::hardCheckMatrices("DOT", multiplicand1, multiplicand2);
+		matrix multiplier(multiplicand1.rows,multiplicand1.columns);
+		for (int i = 0; i < multiplicand1.rows; i++) {
+			for (int j = 0; j < multiplicand1.columns; j++) {
+				multiplier[i][j] = multiplicand1[i][j] * multiplicand2[i][j];
+			}
+		}
+		return multiplier;
 	}
 };
