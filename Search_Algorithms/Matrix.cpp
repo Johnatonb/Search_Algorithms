@@ -1,6 +1,7 @@
 #include<vector>
 #include<iostream>
 #include<exception>
+#include<string>
 
 struct sizeException : public std::exception {
 	const char * what() const throw () {
@@ -34,6 +35,22 @@ private:
 	std::vector<double> operator[](int rhs) {
 		return base[rhs];
 	};
+
+	matrix operator+(matrix rhs) {
+		return matrix::add(*this, rhs);
+	}
+	
+	void operator+=(matrix rhs) {
+		this->add(rhs);
+	}
+
+	matrix operator-(matrix rhs) {
+		return matrix::sub(*this, rhs);
+	}
+
+	void operator-=(matrix rhs) {
+		this->sub(rhs);
+	}
 
 	void update() {
 		hardCheck("SIZE");
@@ -208,6 +225,69 @@ public:
 		}
 	}
 
+	template <class T>
+	void scalarMult(T scalar) {
+		update();
+		hardCheck("SIZE");
+		for (int i = 0; i < rows; i++) {
+			for (int j = 0; j < columns; j++) {
+				base[i][j] *= scalar;
+			}
+		}
+	}
+
+	template <class T>
+	static matrix scalarMult(T scalar, matrix multiplicand) {
+		multiplicand.update();
+		matrix::hardCheckMatrix("SIZE", multiplicand);
+		matrix multiplier(multiplicand.rows, multiplicand.columns);
+		for (int i = 0; i < rows; i++) {
+			for (int j = 0; j < columns; j++) {
+				multiplier[i][j] *= scalar;
+			}
+		}
+	}
+
+	void add(matrix multiplicand) {
+		hardCheck("ADD", multiplicand);
+		for (int i = 0; i < rows; i++) {
+			for (int j = 0; j < columns; j++) {
+				base[i][j] += multiplicand[i][j];
+			}
+		}
+	}
+
+	static matrix add(matrix multiplicand1, matrix multiplicand2) {
+		matrix::hardCheckMatrices("ADD", multiplicand1, multiplicand2);
+		matrix multiplier(multiplicand1.rows, multiplicand1.columns);
+		for (int i = 0; i < multiplicand1.rows; i++) {
+			for (int j = 0; j < multiplicand1.columns; j++) {
+				multiplier[i][j] = multiplicand1[i][j] + multiplicand2[i][j];
+			}
+		}
+		return multiplier;
+	}
+
+	void sub(matrix multiplicand) {
+		hardCheck("SUB", multiplicand);
+		for (int i = 0; i < rows; i++) {
+			for (int j = 0; j < columns; j++) {
+				base[i][j] -= multiplicand[i][j];
+			}
+		}
+	}
+
+	static matrix sub(matrix multiplicand1, matrix multiplicand2) {
+		matrix::hardCheckMatrices("SUB", multiplicand1, multiplicand2);
+		matrix multiplier(multiplicand1.rows, multiplicand1.columns);
+		for (int i = 0; i < multiplicand1.rows; i++) {
+			for (int j = 0; j < multiplicand1.columns; j++) {
+				multiplier[i][j] = multiplicand1[i][j] - multiplicand2[i][j];
+			}
+		}
+		return multiplier;
+	}
+
 	void dot(matrix multiplicand) {
 		hardCheck("DOT", multiplicand);
 		for(int i = 0; i < rows; i++) {
@@ -218,8 +298,6 @@ public:
 	}
 
 	static matrix dot(matrix multiplicand1, matrix multiplicand2) {
-		multiplicand1.update();
-		multiplicand2.update();
 		matrix::hardCheckMatrices("DOT", multiplicand1, multiplicand2);
 		matrix multiplier(multiplicand1.rows,multiplicand1.columns);
 		for (int i = 0; i < multiplicand1.rows; i++) {
@@ -228,5 +306,14 @@ public:
 			}
 		}
 		return multiplier;
+	}
+
+	void printRow(int rowNum) {
+		for (int i = 0; i < columns; i++) {
+			std::cout << base[rowNum - 1][i];
+			if (i != columns - 1) {
+				std::cout << " ";
+			}
+		}
 	}
 };
