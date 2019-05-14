@@ -2,6 +2,8 @@
 #include<iostream>
 #include<exception>
 #include<string>
+#include<opencv2/core/core.hpp>
+#include<opencv2/highgui/highgui.hpp>
 
 struct sizeException : public std::exception {
 	const char * what() const throw () {
@@ -17,8 +19,8 @@ struct opperationException : public std::exception {
 
 class matrix {
 private:
-	int columns = (int)0;
-	int rows = (int)0;
+	size_t columns = (size_t)0;
+	size_t rows = (size_t)0;
 	double determinate = NULL;
 	std::vector<std::vector<double>> base;
 
@@ -26,7 +28,7 @@ private:
 
 	}
 
-	matrix(int rowCount, int columnCount) {
+	matrix(size_t rowCount, size_t columnCount) {
 		for (int i = 0; i < rowCount; i++) {
 			base.push_back(std::vector<double>(columnCount, (double)0));
 		}
@@ -62,7 +64,7 @@ private:
 		try {
 			if (check_type == "SIZE") {
 				if (base.size() > (int)0) {
-					int rowsBasis = base[0].size();
+					size_t rowsBasis = base[0].size();
 					for (int i = 1; i < base.size(); i++) {
 						if (base[i].size() != rowsBasis) {
 							throw sizeException();
@@ -113,7 +115,7 @@ private:
 		try {
 			if (check_type == "SIZE") {
 				if (checkee.base.size() > (int)0) {
-					int rowsBasis = checkee.base[0].size();
+					size_t rowsBasis = checkee.base[0].size();
 					for (int i = 1; i < checkee.base.size(); i++) {
 						if (checkee.base[i].size() != rowsBasis) {
 							throw sizeException();
@@ -161,12 +163,12 @@ private:
 	}
 
 public:
-	int getRows() {
+	size_t getRows() {
 		update();
 		return rows;
 	}
 
-	int getColumns() {
+	size_t getColumns() {
 		update();
 		return columns;
 	}
@@ -174,7 +176,7 @@ public:
 	bool softCheck(std::string check_type) {
 		if (check_type == "SIZE") {
 			if (base.size() > (int)0) {
-				int rowsBasis = base[0].size();
+				size_t rowsBasis = base[0].size();
 				for (int i = 1; i < base.size(); i++) {
 					if (base[i].size() != rowsBasis) {
 						return false;
@@ -192,6 +194,7 @@ public:
 				return false;
 			}
 		}
+		return true;
 	}
 
 	bool softCheck(std::string check_type, matrix comparisonMatrix) {
@@ -206,6 +209,7 @@ public:
 				return false;
 			}
 		}
+		return true;
 	}
 
 	void pushRow( std::vector<double> addend) {
@@ -308,12 +312,34 @@ public:
 		return multiplier;
 	}
 
-	void printRow(int rowNum) {
-		for (int i = 0; i < columns; i++) {
-			std::cout << base[rowNum - 1][i];
-			if (i != columns - 1) {
-				std::cout << " ";
+	void cross(matrix multiplicand){
+		hardCheck("CROSS", multiplicand);
+		matrix multiplier(rows, multiplicand.columns);
+		for (int i = 0; i < multiplier.rows; i++) {
+			for (int j = 0; j < multiplier.columns; j++) {
+				double k = 0;
+				for (int l = 0; l < columns; l++) {
+					k += base[i][l] * multiplicand[l][j];
+				}
+				multiplier[i][j] = k;
 			}
 		}
+		base = multiplier.base;
+		update();
+	}
+
+	static matrix cross(matrix multiplicand1, matrix multiplicand2) {
+		matrix::hardCheckMatrices("CROSS", multiplicand1, multiplicand2);
+		matrix multiplier(multiplicand1.rows, multiplicand2.columns);
+		for (int i = 0; i < multiplier.rows; i++) {
+			for (int j = 0; j < multiplier.columns; j++) {
+				double k = 0;
+				for (int l = 0; l < multiplicand1.columns; l++) {
+					k += multiplicand1[i][l] * multiplicand2[l][j];
+				}
+				multiplier[i][j] = k;
+			}
+		}
+		return multiplier;
 	}
 };
